@@ -169,6 +169,10 @@ function up { Set-Location .. }
 function .. { Set-Location .. }
 function ... { Set-Location ../.. }
 
+# --- Custom Drives ---
+New-PSDrive -Name "repos" -PSProvider FileSystem -Root "~\Repos" -Scope Global | Out-Null
+function repos { Set-Location repos: }
+
 # --- Environment Awareness ---
 `$env:EDITOR = "code"
 
