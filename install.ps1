@@ -47,6 +47,27 @@ foreach ($m in $modules) {
 
 Write-Host "Configuring Oh My Posh with pure theme..." -ForegroundColor Cyan
 
+# Create profile directory if it doesn't exist
+$profileDir = Split-Path $PROFILE -Parent
+if (-not (Test-Path $profileDir)) {
+    New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+}
+
+# Download pure theme to profile directory
+$themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/pure.omp.json"
+$themePath = "$profileDir\pure.omp.json"
+
+Write-Host "Downloading pure theme to $themePath" -ForegroundColor Yellow
+try {
+    Invoke-WebRequest -Uri $themeUrl -OutFile $themePath -UseBasicParsing
+    Write-Host "Theme downloaded successfully" -ForegroundColor Green
+}
+catch {
+    Write-Host "Error downloading theme: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Falling back to default theme" -ForegroundColor Yellow
+    $themePath = $null
+}
+
 # -------------------------------
 # 4. Backup Existing Profile
 # -------------------------------
@@ -75,7 +96,13 @@ Import-Module Terminal-Icons
 Import-Module PSReadLine
 
 # --- Oh My Posh Prompt ---
-oh-my-posh init pwsh --config "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/pure.omp.json" | Invoke-Expression
+$profileDir = Split-Path $PROFILE -Parent
+if (Test-Path "$profileDir\pure.omp.json") {
+    oh-my-posh init pwsh --config "$profileDir\pure.omp.json" | Invoke-Expression
+} else {
+    # Fallback to URL if local file doesn't exist
+    oh-my-posh init pwsh --config "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/pure.omp.json" | Invoke-Expression
+}
 
 # --- PSReadLine Enhancements ---
 Set-PSReadLineOption -PredictionSource History

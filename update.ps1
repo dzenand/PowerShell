@@ -33,10 +33,30 @@ foreach ($m in $modules) {
 }
 
 # -------------------------------
-# 3. Oh My Posh Cache Cleanup
+# 3. Update Oh My Posh Theme
 # -------------------------------
 
-Write-Host "Clearing Oh My Posh cache..."
+Write-Host "Updating Oh My Posh theme..."
+
+# Update local theme file in profile directory
+$profileDir = Split-Path $PROFILE -Parent
+$themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/pure.omp.json"
+$themePath = "$profileDir\pure.omp.json"
+
+if (Test-Path $profileDir) {
+    try {
+        Invoke-WebRequest -Uri $themeUrl -OutFile $themePath -UseBasicParsing
+        Write-Host "Theme updated successfully" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Error updating theme: $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
+else {
+    Write-Host "Profile directory not found. Run install.ps1 first." -ForegroundColor Yellow
+}
+
+# Clear Oh My Posh cache
 oh-my-posh cache clear
 
 # -------------------------------
