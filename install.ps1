@@ -20,7 +20,6 @@ Install-App Git.Git
 Install-App JanDeDobbeleer.OhMyPosh
 Install-App NerdFonts.CascadiaCode
 Install-App eza-community.eza
-Install-App nepnep.neofetch-win
 
 # -------------------------------
 # 2. Install PowerShell Modules
@@ -36,7 +35,8 @@ foreach ($m in $modules) {
     if (-not (Get-Module -ListAvailable -Name $m)) {
         Write-Host "Installing module: $m"
         Install-Module $m -Scope CurrentUser -Force
-    } else {
+    }
+    else {
         Write-Host "Module already installed: $m"
     }
 }
@@ -73,7 +73,8 @@ if (Test-Path $PROFILE) {
     $backup = "$PROFILE.bak_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
     Copy-Item $PROFILE $backup
     Write-Host "Existing profile backed up to $backup" -ForegroundColor Yellow
-} else {
+}
+else {
     New-Item -ItemType File -Path $PROFILE -Force | Out-Null
 }
 
@@ -84,7 +85,6 @@ if (Test-Path $PROFILE) {
 $profileContent = @"
 # ============================
 #  Power Developer Profile
-#  Clean, Fast, Modular
 # ============================
 
 # --- Modules ---
@@ -102,7 +102,7 @@ Set-PSReadLineOption -EditMode Windows
 Set-PSReadLineOption -HistorySearchCursorMovesToEnd
 
 # --- Aliases ---
-Set-Alias ll "eza --long --icons"
+function ll { eza --long --icons @args }
 Set-Alias ls eza
 Set-Alias g git
 Set-Alias d docker
@@ -124,33 +124,33 @@ function gprune {
     Write-Host "Finding local branches not on origin..." -ForegroundColor Cyan
 
     # Protected branches
-    \$protected = @("main", "master", "develop")
+    `$protected = @("main", "master", "develop")
 
     # Current branch
-    \$current = git rev-parse --abbrev-ref HEAD
+    `$current = git rev-parse --abbrev-ref HEAD
 
     # Branches to delete
-    \$branches = git branch --format="%(refname:short)" |
+    `$branches = git branch --format="%(refname:short)" |
         Where-Object {
-            \$_ -ne \$current -and
-            -not (\$protected -contains \$_) -and
-            -not (git show-ref --verify --quiet "refs/remotes/origin/\$_")
+            `$_ -ne `$current -and
+            -not (`$protected -contains `$_) -and
+            -not (git show-ref --verify --quiet "refs/remotes/origin/`$_")
         }
 
-    if (-not \$branches) {
+    if (-not `$branches) {
         Write-Host "No stale branches found." -ForegroundColor Green
         return
     }
 
     Write-Host "`nThe following branches no longer exist on origin:" -ForegroundColor Yellow
-    \$branches | ForEach-Object { Write-Host " - \$_" }
+    `$branches | ForEach-Object { Write-Host " - `$_" }
 
-    \$confirm = Read-Host "`nDelete these branches? (y/N)"
+    `$confirm = Read-Host "`nDelete these branches? (y/N)"
 
-    if (\$confirm -eq "y") {
-        foreach (\$b in \$branches) {
-            git branch -D \$b
-            Write-Host "Deleted \$b" -ForegroundColor Red
+    if (`$confirm -eq "y") {
+        foreach (`$b in `$branches) {
+            git branch -D `$b
+            Write-Host "Deleted `$b" -ForegroundColor Red
         }
         Write-Host "`nCleanup complete." -ForegroundColor Green
     } else {
@@ -161,7 +161,7 @@ function gprune {
 # --- SQL Helpers (local dev) ---
 function sqlrun {
     param([string]`$query)
-    sqlcmd -S localhost -Q `"$query`"
+    sqlcmd -S localhost -Q "`$query"
 }
 
 # --- Navigation Shortcuts ---
@@ -172,5 +172,18 @@ function ... { Set-Location ../.. }
 # --- Environment Awareness ---
 `$env:EDITOR = "code"
 
+# --- Refresh PATH (ensures winget-installed tools are available) ---
+`$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
+
 # --- Welcome Message ---
-Write-Host "Loaded Power Developer Profile
+Write-Host "Loaded Power Developer Profile ✔" -ForegroundColor Cyan
+"@
+
+Set-Content -Path $PROFILE -Value $profileContent -Encoding UTF8
+
+# -------------------------------
+# 6. Final Message
+# -------------------------------
+
+Write-Host "`n=== Setup Complete ===" -ForegroundColor Green
+Write-Host "Restart Windows Terminal and set your font to 'Cascadia Code Nerd Font'." -ForegroundColor Cyan
