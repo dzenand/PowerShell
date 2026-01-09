@@ -11,7 +11,8 @@ Import-Module PSReadLine
 $profileDir = Split-Path $PROFILE -Parent
 if (Test-Path "$profileDir\pure.omp.json") {
     oh-my-posh init pwsh --config "$profileDir\pure.omp.json" | Invoke-Expression
-} else {
+}
+else {
     # Fallback to URL if local file doesn't exist
     oh-my-posh init pwsh --config "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/pure.omp.json" | Invoke-Expression
 }
@@ -52,11 +53,11 @@ function gprune {
 
     # Branches to delete
     $branches = git branch --format="%(refname:short)" |
-        Where-Object {
-            $_ -ne $current -and
-            -not ($protected -contains $_) -and
-            -not (git show-ref --verify --quiet "refs/remotes/origin/$_")
-        }
+    Where-Object {
+        $_ -ne $current -and
+        -not ($protected -contains $_) -and
+        -not (git show-ref --verify --quiet "refs/remotes/origin/$_")
+    }
 
     if (-not $branches) {
         Write-Host "No stale branches found." -ForegroundColor Green
@@ -74,7 +75,8 @@ function gprune {
             Write-Host "Deleted $b" -ForegroundColor Red
         }
         Write-Host "`nCleanup complete." -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "Aborted." -ForegroundColor Yellow
     }
 }
@@ -98,7 +100,8 @@ function repos { Set-Location repos: }
 $env:EDITOR = "code"
 
 # --- Refresh PATH (ensures winget-installed tools are available) ---
-$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
+$userPath = [System.Environment]::GetEnvironmentVariable("PATH", "User")
+$env:PATH = "$userPath;$env:PATH" -split ';' | Select-Object -Unique | Join-String -Separator ';'
 
 # --- Welcome Message ---
 Write-Host "Loaded Power Developer Profile ✔" -ForegroundColor Cyan
